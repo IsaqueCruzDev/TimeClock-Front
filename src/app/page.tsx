@@ -1,101 +1,189 @@
-import Image from "next/image";
+'use client'
+import React, { useEffect, useRef, useState } from "react";
+import ButtonComponent from "@/components/Button/Button";
+import ModalComponent from "@/components/Modal/Modal";
+import SidebarComponent from "@/components/Sidebar/Sidebar";
+import DatePicker from "@/components/DatePicker/DatePicker";
+import SelectComponent from "@/components/Select/Select";
+import DataTable from "@/components/Table/Table";
+import { createTime, deleteTime, getTimes, updateTime } from "@/server/time";
+import dayjs, { Dayjs } from "dayjs";
+import { SelectChangeEvent } from "@mui/material";
+import { getOrganizations } from "@/server/organization";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(timezone);
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const modalRef = useRef<HTMLDivElement>(null)
+  const modalDeleteRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [user, setUser] = useState<any | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [organizations, setOrganizations] = useState(null)
+  const [hourStart, setHourStart] = useState(new Date)
+  const [hourEnd, setHourEnd] = useState(new Date)
+  const [organizationSelected, setOrganizationSelected] = useState(0)
+  const [times, setTimes] = useState(null)
+  const [timeId, setTimeId] = useState(0)
+  const [isCreate, setIsCreate] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const foundUser = localStorage.getItem("user")
+    if (foundUser) {
+      const parsedUser = JSON.parse(foundUser)
+      setUser(parsedUser)
+    }
+    getTimeClocks()
+    getOrganization()
+  }, []) 
+
+  const handleClickToShowModal = () => {
+    setIsCreate(true)
+    setShowModal(!showModal)
+  }
+
+  const handleCreate = async () => {
+    const data = {
+      hourStart: dayjs(hourStart).utc().toDate(),
+      userId: user.id,
+      organizationId: organizationSelected
+    }
+    try {
+      const time = await createTime(data)
+      getTimeClocks()
+      setShowModal(false)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const handleEdit = async () => {
+    const data = {
+      hourStart: dayjs(hourStart).toDate(),
+      hourEnd: dayjs(hourEnd).toDate(),
+      userId: user.id,
+      organizationId: organizationSelected
+    }
+    try {
+      const time = await updateTime(timeId, data)
+      getTimeClocks()
+      setShowModal(false)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const handleDelete = async () => {
+    const time = await deleteTime(timeId)
+    getTimeClocks()
+    setShowDeleteModal(false)
+  }
+
+  const handleCancel = () => {
+    setShowModal(false)
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false)
+  }
+
+  const startHourChange = (newValue: Dayjs | null) => {
+    console.log(newValue?.toDate())
+
+    if (newValue) {
+      setHourStart(newValue.toDate())
+    }
+  }
+
+  const endHourChange = (newValue: Dayjs | null) => {
+    console.log(newValue?.toDate())
+
+    if (newValue) {
+      setHourEnd(newValue.toDate())
+    }
+  }
+
+  const handleSelectOrganization = (event: SelectChangeEvent<string>) => {
+    const value = Number(event.target.value)
+    console.log(value)
+    setOrganizationSelected(value)
+  }
+
+  const getTimeClocks = async () => {
+    try {
+      const times = await getTimes()
+      setTimes(times)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const getOrganization = async () => {
+    try {
+      const organizations = await getOrganizations()
+      setOrganizations(organizations)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const handleEditClicked = (row: any) => {
+    setIsCreate(false)
+    setTimeId(row.id)
+    setOrganizationSelected(row.organizationId)
+    setHourStart(row.hourStart)
+    setHourEnd(row.hourEnd)
+    setShowModal(true)
+  }
+
+  const handleDeleteClicked = (id: number) => {
+    setTimeId(id)
+    setShowDeleteModal(true)
+  }
+
+  return (
+    <>
+      <main>
+        <SidebarComponent />
+        <div className="sm:ml-64 flex flex-col">
+          <header className="shadow-md h-14 w-full flex items-center p-4 dark:bg-gray-800 dark:text-white">Time Planner</header>
+
+          <section className="p-4">
+            <div className="w-full flex items-center justify-between border-b-2 mt-4 pb-2">
+              <span>Days and Hours</span>
+
+              {user?.role === 1 && (
+                <div>
+                  <ButtonComponent ref={buttonRef} onClick={() => handleClickToShowModal()} text="New TimeClock" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <DataTable content={times!} handleEdit={handleEditClicked} handleDelete={handleDeleteClicked} user={user} />
+            </div>
+          </section>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+      <ModalComponent ref={modalRef} handleOk={isCreate ? handleCreate : handleEdit} handleCancel={handleCancel} isModalOpen={showModal} title="New TimeClock">
+        <DatePicker label="Start Hour" onChange={startHourChange} date={dayjs(hourStart).utc()} />
+        {!isCreate && (
+          <DatePicker label="End Hour" onChange={endHourChange} date={dayjs(hourEnd).utc()} />
+        )}
+        <SelectComponent 
+          label="Organization" 
+          options={organizations || []}
+          onChange={handleSelectOrganization}
+          choice={organizationSelected.toString()}
+        />
+      </ModalComponent>
+
+      <ModalComponent ref={modalDeleteRef} handleOk={handleDelete} handleCancel={handleDeleteCancel} isModalOpen={showDeleteModal} title="Delete TimeClock">
+       <h4>Tem certeza de que deseja deletar o time?</h4>
+      </ModalComponent>
+    </>
   );
 }
