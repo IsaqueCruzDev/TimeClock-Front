@@ -11,12 +11,14 @@ interface IDatePicker {
     onChange: (newValue: Dayjs | null) => void
 }
 
-export default function DatePicker({ label, date, onChange }: IDatePicker) {
+const DatePicker = React.forwardRef<HTMLDivElement, IDatePicker>(({ label, date, onChange }, ref) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DemoContainer components={['DateTimePicker']}>
-        <DateTimePicker label={label} onChange={onChange} value={date || null}/>
+        <DateTimePicker ref={ref} label={label} onChange={onChange} value={date || null}/>
       </DemoContainer>
     </LocalizationProvider>
   );
-}
+})
+
+export default DatePicker

@@ -15,9 +15,12 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(timezone);
 
 export default function Home() {
+  const dataPickerStartRef = useRef<HTMLDivElement | null>(null)
+  const dataPickerEndRef = useRef<HTMLDivElement | null>(null)
+  const dataTableRef = useRef<HTMLDivElement | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const modalDeleteRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
   const [user, setUser] = useState<any | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -162,16 +165,16 @@ export default function Home() {
             </div>
 
             <div className="mt-4">
-              <DataTable content={times!} handleEdit={handleEditClicked} handleDelete={handleDeleteClicked} user={user} />
+              <DataTable ref={dataTableRef} rows={times!} handleEdit={handleEditClicked} handleDelete={handleDeleteClicked} user={user} />
             </div>
           </section>
         </div>
       </main>
 
       <ModalComponent ref={modalRef} handleOk={isCreate ? handleCreate : handleEdit} handleCancel={handleCancel} isModalOpen={showModal} title="New TimeClock">
-        <DatePicker label="Start Hour" onChange={startHourChange} date={dayjs(hourStart).utc()} />
+        <DatePicker ref={dataPickerStartRef} label="Start Hour" onChange={startHourChange} date={dayjs(hourStart).utc()} />
         {!isCreate && (
-          <DatePicker label="End Hour" onChange={endHourChange} date={dayjs(hourEnd).utc()} />
+          <DatePicker ref={dataPickerEndRef} label="End Hour" onChange={endHourChange} date={dayjs(hourEnd).utc()} />
         )}
         <SelectComponent 
           label="Organization" 

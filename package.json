@@ -22,7 +22,8 @@
     "nookies": "^2.5.2",
     "react": "18",
     "react-dom": "18",
-    "react-pro-sidebar": "^1.1.0"
+    "react-pro-sidebar": "^1.1.0",
+    "react-toastify": "^10.0.6"
   },
   "devDependencies": {
     "@rocketseat/eslint-config": "^2.2.2",

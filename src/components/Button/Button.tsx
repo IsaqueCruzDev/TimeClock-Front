@@ -6,10 +6,10 @@ interface IButtonComponent {
     text: string
 }
 
-const ButtonComponent = forwardRef(({ onClick, text }: IButtonComponent, ref) => {
+const ButtonComponent = forwardRef<HTMLButtonElement | null, IButtonComponent>(({ onClick, text }, ref) => {
 
     return (
-        <Button onClick={onClick} type="primary" ref={ref as any}>{ text }</Button>
+        <Button onClick={onClick} type="primary" ref={ref as React.Ref<any>}>{ text }</Button>
     )
 })
 

@@ -9,7 +9,7 @@ import { getUserById } from '@/server/user';
 dayjs.extend(utc)
 
 interface IDataTable {
-  content: Array<{
+  rows: Array<{
     id: number;
     hourStart: string | null;
     hourEnd: string | null;
@@ -23,7 +23,7 @@ interface IDataTable {
 
 const paginationModel = { page: 0, pageSize: 5 };
 
-export default function DataTable({ content, handleEdit, handleDelete, user }: IDataTable) {
+const DataTable = React.forwardRef<HTMLDivElement, IDataTable>(({ rows, handleEdit, handleDelete, user }, ref) => {
   
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', flex: 1 },
@@ -91,7 +91,8 @@ const columns: GridColDef[] = [
   return (
     <Paper sx={{ height: 400, width: '100%' }}>
       <DataGrid
-        rows={content}
+        ref={ref}
+        rows={rows}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[5, 10]}
@@ -100,4 +101,6 @@ const columns: GridColDef[] = [
       />
     </Paper>
   );
-}
+})
+
+export default DataTable
